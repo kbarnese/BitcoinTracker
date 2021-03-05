@@ -1,0 +1,33 @@
+
+
+
+.chart-title {
+  -fx-font-size: 28pt;
+  -fx-font-family: "Ravie";
+  -fx-text-fill: red; 
+}
+
+.chart-plot-background {
+    -fx-background-color: powderblue;
+}
+
+.chart-horizontal-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: black;
+    -fx-stroke-width: 2px;
+    -fx-stroke-dash-array: 20.0 5.0;
+}
+
+.chart-series-line{
+    -fx-stroke:red;
+}
+
+.chart-line-symbol{
+    -fx-stroke-fill: red;
+}
+
+
+
