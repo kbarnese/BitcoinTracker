@@ -22,70 +22,61 @@ import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.chart.XYChart;
 
-
-
-
-
 /**
  *
  * @author k_bar
  */
+//Model used in program, supports async. 
 public class DataModelAsync {
-   
-    private  SimpleFloatProperty high;
-    private  SimpleFloatProperty low;
-    private  SimpleFloatProperty close;
-    private  SimpleStringProperty time;
+
+    //Class variables. 
+    private SimpleFloatProperty high;
+    private SimpleFloatProperty low;
+    private SimpleFloatProperty close;
+    private SimpleStringProperty time;
     private SimpleFloatProperty open;
-    
-    
-    
-        public String getTime() {
-            return time.getValue();
-        }
 
- 
+    //getters and setters
+    public String getTime() {
+        return time.getValue();
+    }
 
-
-    public  void setHigh(float high) {
+    public void setHigh(float high) {
         this.high = new SimpleFloatProperty(high);
     }
 
-
-    public  void setLow(float low) {
+    public void setLow(float low) {
         this.low = new SimpleFloatProperty(low);
     }
 
-    public  float getClose() {
+    public float getClose() {
         return close.getValue();
     }
-    
-    public float getOpen(){
+
+    public float getOpen() {
         return open.getValue();
     }
 
-    public  void setClose(float close) {
+    public void setClose(float close) {
         this.close = new SimpleFloatProperty(close);
     }
     
-
-    
-    public DataModelAsync(float high, float low, float open, float close, String time){
+    //constructor
+    public DataModelAsync(float high, float low, float open, float close, String time) {
         this.high = new SimpleFloatProperty(high);
         this.low = new SimpleFloatProperty(low);
         this.open = new SimpleFloatProperty(open);
         this.close = new SimpleFloatProperty(close);
         this.time = new SimpleStringProperty(time);
-        
+
     }
     
-    
-public static ArrayList<DataModelAsync>  readFromAPI(String selection){
+    //gets data to from api
+    public static ArrayList<DataModelAsync> readFromAPI(String selection) {
 
         String contents = "";
-        String urlString ="";
-        
-        
+        String urlString = "";
+
         switch (selection) {
             case "Day":
                 urlString = "https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=10";
@@ -99,20 +90,18 @@ public static ArrayList<DataModelAsync>  readFromAPI(String selection){
             default:
                 break;
         }
-            
-            
-        
+
         try {
             URL address = new URL(urlString);
             InputStreamReader reader = new InputStreamReader(address.openStream());
             BufferedReader buffer = new BufferedReader(reader);
 
             String line = "";
-            while((line = buffer.readLine())!= null){
+            while ((line = buffer.readLine()) != null) {
                 contents += line;
             }
 
-           return DataModelAsync.parse(contents, selection);
+            return DataModelAsync.parse(contents, selection);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -120,67 +109,68 @@ public static ArrayList<DataModelAsync>  readFromAPI(String selection){
         return null;
 
     }
-    
-private  static ArrayList<DataModelAsync> parse(String contents, String selection){
+
+    //formats data from api, called by DataModelAsync
+    private static ArrayList<DataModelAsync> parse(String contents, String selection) {
         Gson parser = new Gson();
         JsonObject parsed = parser.fromJson(contents, JsonObject.class).getAsJsonObject("Data");
-        
+
         JsonArray results = parsed.get("Data").getAsJsonArray();
 
         ArrayList<DataModelAsync> values = new ArrayList<DataModelAsync>();
-        
-        
 
-        
-        for(JsonElement item:results){
-            
-            
+        for (JsonElement item : results) {
+
             JsonObject btcInstance_item = item.getAsJsonObject();
-            
-            
+
             long time_value = btcInstance_item.getAsJsonPrimitive("time").getAsLong();
             float open_value = btcInstance_item.getAsJsonPrimitive("open").getAsFloat();
             float close_value = btcInstance_item.getAsJsonPrimitive("close").getAsFloat();
             float high_value = btcInstance_item.getAsJsonPrimitive("high").getAsFloat();
             float low_value = btcInstance_item.getAsJsonPrimitive("low").getAsFloat();
-            
 
             ZonedDateTime zdt = Instant.ofEpochSecond(time_value).atZone(ZoneId.systemDefault());
             String time_formatted;
-            if(selection.equals("Day"))
+            if (selection.equals("Day")) {
                 time_formatted = zdt.format(DateTimeFormatter.ofPattern("MM/dd"));
-            else
+            } else {
                 time_formatted = zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
-            
-            values.add(new DataModelAsync(high_value, low_value, open_value, close_value, time_formatted ));
-            
+            }
+
+            values.add(new DataModelAsync(high_value, low_value, open_value, close_value, time_formatted));
+
         }
-        
+
         return values;
 
+    }
+    
+    //public method that given an arraylist of DataModelAsync
+    //returns the largest high value
+    public static float getHigh(ArrayList<DataModelAsync> values) {
+        float tempHigh = 0;
+        for (DataModelAsync dma : values) {
+            if (dma.high.getValue() > tempHigh) {
+                tempHigh = dma.high.getValue();
+            }
+        }
+
+        return tempHigh;
 
     }
 
-public static float getHigh(ArrayList<DataModelAsync> values){
-    float tempHigh = 0;
-    for(DataModelAsync dma : values){
-        if (dma.high.getValue() > tempHigh) 
-            tempHigh = dma.high.getValue();
-    }
-    
-    return tempHigh;
-    
-}
+    //public method that given an arraylist of DataModelAsync
+    //returns the smalles low value
+    public static float getLow(ArrayList<DataModelAsync> values) {
+        float templow = 0;
+        for (DataModelAsync dma : values) {
+            if (dma.low.getValue() < templow || templow == 0) {
+                templow = dma.low.getValue();
+            }
+        }
 
-public static float getLow(ArrayList<DataModelAsync> values){
-    float templow = 0;
-    for(DataModelAsync dma : values){
-        if (dma.low.getValue() < templow || templow == 0) 
-            templow = dma.low.getValue();
+        return templow;
+
     }
-    
-    return templow;
-    
-}
-    
+
 }

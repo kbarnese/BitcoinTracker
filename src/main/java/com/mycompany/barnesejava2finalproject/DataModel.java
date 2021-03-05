@@ -28,6 +28,7 @@ import javafx.scene.chart.XYChart;
  *
  * @author k_bar
  */
+//Model Version Created before Async implemenatation. 
 public class DataModel {
    
     private SimpleFloatProperty high;

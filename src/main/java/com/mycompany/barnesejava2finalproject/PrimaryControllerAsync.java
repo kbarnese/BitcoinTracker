@@ -16,9 +16,18 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 
+//Controller used in program, supports async.
 public class PrimaryControllerAsync implements Initializable{
-    @FXML Pane pane;
-    @Override
+   
+@FXML Button dayButton;
+@FXML Button hourButton;
+@FXML Button minuteButton;
+@FXML LineChart<String, Float> chart;
+@FXML CategoryAxis x;
+@FXML NumberAxis y;
+@FXML Label currentPrice;
+@Override
+    //some chart initilization, fires the day button
     public void initialize(URL url, ResourceBundle rb) {
      y.setAutoRanging(false);
      chart.setLegendVisible(false);
@@ -28,20 +37,10 @@ public class PrimaryControllerAsync implements Initializable{
      dayButton.fire();
     
     }
-        
-
-
-
-
-@FXML Button dayButton;
-@FXML Button hourButton;
-@FXML Button minuteButton;
-@FXML LineChart<String, Float> chart;
-@FXML CategoryAxis x;
-@FXML NumberAxis y;
-@FXML Label currentPrice;
-
-
+//method on event button clicks.
+//button text is the key to determine type of api data to pull
+//async implementation, text is passed to Data model to get data
+//the data is then sent to setAxis
 public void eventButtonClick(ActionEvent event){
     
     CompletableFuture<String> cf = new CompletableFuture<>();
@@ -54,23 +53,18 @@ public void eventButtonClick(ActionEvent event){
          
          return b.getText();})
             .thenApply(param -> { 
-                 
-                 
-                return DataModelAsync.readFromAPI(param);
-               }).thenApply((param) -> setAxis(param))
+                return DataModelAsync.readFromAPI(param);})
+            .thenApply((param) -> setAxis(param))
             .thenAccept((param) -> drawChart(param));
     
 }
 
-private void drawChart( DataAndClose values){
-    Platform.runLater(() ->{
-    chart.getData().clear();    
-    chart.getData().addAll(values.getXyvalues());
-    currentPrice.setText(String.format("$%.0f",values.getClose()));
-});
-    
-}
 
+//set Axis sets the y-axis of the plot. Uses the highest and lowest values as the bounds
+//uses tick marks for about 5 ticks between those bounds. 
+//returns a DataAndClose Class that is a containter for the Data
+// as a XYChart.Series and the close value of the last recorded digit to be used
+// as the currentPrice for the drawChart method
 private  DataAndClose setAxis(ArrayList<DataModelAsync> values){
     
     //XYChart.Series<String, Float> xyvalues = new XYChart.Series<String, Float>();
@@ -97,7 +91,19 @@ private  DataAndClose setAxis(ArrayList<DataModelAsync> values){
     
 }
 
+//Draw chart uses .runlater to draw the chart
+//sets the value of the currentPrice on the application
+private void drawChart( DataAndClose values){
+    Platform.runLater(() ->{
+    chart.getData().clear();    
+    chart.getData().addAll(values.getXyvalues());
+    currentPrice.setText(String.format("$%.0f",values.getClose()));
+});
+    
+}
 
+//helper method for setAxis, rounds an integer to a whole numnber
+// with only one digit. ie. 57345 -> 50000
 private int rounder(int i ){
     
     float val = (float)i;
@@ -112,6 +118,8 @@ private int rounder(int i ){
     
 }
 
+//a class to hold a float for last closing value
+//and a XYChart.Series<String, Float>
 class DataAndClose{
     public XYChart.Series<String, Float> xyvalues;
     private float close;
@@ -134,8 +142,5 @@ class DataAndClose{
     
     
     
-}
-
-    
-    
+}   
 }
